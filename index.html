@@ -1,11 +1,113 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNAMA WebAR</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>AR - Vídeo do Instagram</title>
+
+  <!-- A-Frame + AR.js -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar-nft.js"></script>
+
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
+
+    /* Overlay que aparece quando a imagem é reconhecida */
+    #video-overlay {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      padding: 14px 22px;
+      border-radius: 40px;
+      text-align: center;
+    }
+
+    #video-overlay a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #video-overlay a::before {
+      content: "▶";
+    }
+
+    /* Dica antes de escanear */
+    #hint {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 999;
+    }
+  </style>
 </head>
 <body>
-    
+
+  <div id="hint">Aponte a câmera para a imagem</div>
+
+  <div id="video-overlay">
+    <a id="video-link" href="#" target="_blank" rel="noopener">Assistir vídeo no Instagram</a>
+  </div>
+
+  <a-scene
+    vr-mode-ui="enabled: false"
+    embedded
+    arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: true;"
+    renderer="logarithmicDepthBuffer: true;"
+  >
+    <!--
+      Troque os caminhos abaixo pelos arquivos .fset / .fset3 / .iset
+      gerados a partir da SUA imagem (veja instruções abaixo do código).
+      Não coloque a extensão, só o "nome-base" do arquivo.
+    -->
+    <a-nft
+      type="nft"
+      url="assets/marker/pattern-marker"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+      id="target"
+    >
+    </a-nft>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    // Link do vídeo do Instagram que você quer disponibilizar
+    const INSTAGRAM_VIDEO_URL = "https://www.instagram.com/p/DbTMLwJlor8/?img_index=1";
+
+    const target = document.querySelector('#target');
+    const overlay = document.querySelector('#video-overlay');
+    const hint = document.querySelector('#hint');
+    const link = document.querySelector('#video-link');
+
+    link.href = INSTAGRAM_VIDEO_URL;
+
+    target.addEventListener('markerFound', () => {
+      overlay.style.display = 'block';
+      hint.style.display = 'none';
+    });
+
+    target.addEventListener('markerLost', () => {
+      overlay.style.display = 'none';
+      hint.style.display = 'block';
+    });
+  </script>
 </body>
 </html>
