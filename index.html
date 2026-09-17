@@ -1,11 +1,96 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNAMA WebAR</title>
+    <meta name="description" content="Descubra conteúdos da UNAMA em realidade aumentada diretamente pelo navegador do seu celular.">
+    <meta name="theme-color" content="#073d36">
+    <title>UNAMA WebAR | Conhecimento além da imagem</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    
+    <header class="site-header">
+        <a class="brand" href="index.html" aria-label="UNAMA WebAR - Página inicial">
+            <span class="brand__mark" aria-hidden="true">
+                <svg viewBox="0 0 42 42"><path d="M8 8.5v14.3C8 30 13.8 36 21 36s13-6 13-13.2V8.5h-7.2v14.1c0 3.4-2.6 6.3-5.8 6.3s-5.8-2.9-5.8-6.3V8.5H8Z"/><path d="M18 8.5h6v13.8a3 3 0 0 1-6 0V8.5Z" class="brand__mark-detail"/></svg>
+            </span>
+            <span class="brand__name">UNAMA <strong>WebAR</strong></span>
+        </a>
+        <a class="header-link" href="#como-usar">Como funciona</a>
+    </header>
+
+    <main>
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero__glow hero__glow--one" aria-hidden="true"></div>
+            <div class="hero__glow hero__glow--two" aria-hidden="true"></div>
+            <div class="hero__content">
+                <div class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Uma nova forma de explorar a UNAMA</div>
+                <h1 id="hero-title">Conhecimento que ganha <span>novas dimensões.</span></h1>
+                <p class="hero__description">Aponte a câmera do seu celular para uma imagem da UNAMA e descubra conteúdos interativos em realidade aumentada — sem instalar nenhum aplicativo.</p>
+                <div class="hero__actions">
+                    <a class="button button--primary" href="pages/page_AR.html">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l.7-1.4A2 2 0 0 1 10.2 3h3.6a2 2 0 0 1 1.8 1.1l.7 1.4h1.2A2.5 2.5 0 0 1 20 8v8.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z"/><circle cx="12" cy="12.5" r="3.25"/></svg>
+                        Iniciar experiência AR
+                    </a>
+                    <a class="text-link" href="#como-usar">Veja como usar<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></a>
+                </div>
+                <p class="privacy-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.9 8.8 7 10 4.1-1.2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Sua câmera só será ativada com sua permissão.</p>
+            </div>
+
+            <div class="hero__visual" role="img" aria-label="Demonstração de um celular reconhecendo uma imagem da UNAMA">
+                <div class="orbit orbit--large" aria-hidden="true"></div>
+                <div class="orbit orbit--small" aria-hidden="true"></div>
+                <div class="phone" aria-hidden="true">
+                    <div class="phone__top"></div>
+                    <div class="phone__screen">
+                        <div class="camera-status"><span></span>Câmera ativa</div>
+                        <div class="scanner">
+                            <span class="scanner__corner scanner__corner--tl"></span><span class="scanner__corner scanner__corner--tr"></span><span class="scanner__corner scanner__corner--bl"></span><span class="scanner__corner scanner__corner--br"></span><span class="scanner__line"></span>
+                            <div class="target-card"><span class="target-card__symbol">U</span><span>UNAMA</span><small>Universidade da Amazônia</small></div>
+                        </div>
+                        <div class="recognized"><span class="recognized__icon">✓</span><span><strong>Imagem reconhecida</strong><small>Conteúdo pronto para explorar</small></span></div>
+                    </div>
+                    <div class="phone__home"></div>
+                </div>
+                <div class="floating-card floating-card--ar" aria-hidden="true"><span>AR</span><div><strong>Realidade aumentada</strong><small>Direto no navegador</small></div></div>
+                <div class="floating-card floating-card--spark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 1.5 5.1L18 9l-4.5 1.9L12 16l-1.5-5.1L6 9l4.5-1.9L12 2Z"/><path d="m19 14 .7 2.3L22 17l-2.3.7L19 20l-.7-2.3L16 17l2.3-.7L19 14Z"/></svg></div>
+            </div>
+        </section>
+
+        <section class="how-it-works" id="como-usar" aria-labelledby="steps-title">
+            <div class="section-heading">
+                <span class="section-kicker">Simples e rápido</span>
+                <h2 id="steps-title">Como viver essa experiência?</h2>
+                <p>Você só precisa do celular e de uma imagem oficial da UNAMA.</p>
+            </div>
+            <ol class="steps">
+                <li class="step">
+                    <div class="step__number">01</div><div class="step__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l.7-1.4A2 2 0 0 1 10.2 3h3.6a2 2 0 0 1 1.8 1.1l.7 1.4h1.2A2.5 2.5 0 0 1 20 8v8.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z"/><circle cx="12" cy="12.5" r="3.25"/></svg></div>
+                    <h3>Permita o acesso</h3><p>Toque em iniciar e autorize o uso da câmera quando o navegador solicitar.</p>
+                </li>
+                <li class="step">
+                    <div class="step__number">02</div><div class="step__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M8 12h8"/></svg></div>
+                    <h3>Aponte para a imagem</h3><p>Enquadre na tela uma imagem disponibilizada pela UNAMA e mantenha o celular firme.</p>
+                </li>
+                <li class="step">
+                    <div class="step__number">03</div><div class="step__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2Z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z"/></svg></div>
+                    <h3>Explore o conteúdo</h3><p>Veja modelos, vídeos e informações surgirem diante de você em realidade aumentada.</p>
+                </li>
+            </ol>
+            <div class="cta-banner">
+                <div><span class="section-kicker">Pronto para começar?</span><h2>A UNAMA por uma nova perspectiva.</h2></div>
+                <a class="button button--light" href="pages/page_AR.html">Abrir câmera<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg></a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <a class="brand brand--footer" href="index.html" aria-label="UNAMA WebAR - Página inicial"><span class="brand__mark" aria-hidden="true"><svg viewBox="0 0 42 42"><path d="M8 8.5v14.3C8 30 13.8 36 21 36s13-6 13-13.2V8.5h-7.2v14.1c0 3.4-2.6 6.3-5.8 6.3s-5.8-2.9-5.8-6.3V8.5H8Z"/><path d="M18 8.5h6v13.8a3 3 0 0 1-6 0V8.5Z" class="brand__mark-detail"/></svg></span><span class="brand__name">UNAMA <strong>WebAR</strong></span></a>
+        <p>Experiência acadêmica, tecnologia e inovação.</p>
+    </footer>
 </body>
 </html>
