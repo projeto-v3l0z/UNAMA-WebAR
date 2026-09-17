@@ -87,7 +87,7 @@
     <a-assets>
       <video
         id="ar-video"
-        src="assets/Unama-video.webm"
+        src="assets/Unama-video.mp4"
         preload="auto"
         loop
         muted
@@ -115,6 +115,16 @@
         Ajuste "height" para bater com a proporção real da sua imagem/vídeo:
         height = altura_da_imagem / largura_da_imagem
       -->
+      <!-- TESTE TEMPORÁRIO: caixa vermelha no lugar do vídeo, pra confirmar se algo aparece nessa posição -->
+      <a-box
+        color="red"
+        width="0.3"
+        height="0.3"
+        depth="0.3"
+        position="0.5 0.28 0.15"
+      ></a-box>
+
+      <!--
       <a-video
         src="#ar-video"
         width="1"
@@ -122,6 +132,7 @@
         position="0.5 0.28 0.01"
         rotation="0 0 0"
       ></a-video>
+      -->
     </a-nft>
 
     <a-entity camera></a-entity>
