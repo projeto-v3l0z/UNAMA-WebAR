@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>AR - Vídeo do Instagram</title>
 
-  <!-- A-Frame + AR.js -->
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar-nft.js"></script>
+  <!-- A-Frame + MindAR (image tracking) -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
@@ -78,16 +78,21 @@
     <a id="video-link" href="#" target="_blank" rel="noopener">Ver original no Instagram</a>
   </div>
 
+  <!--
+    imageTargetSrc aponta para o arquivo .mind (gerado a partir da SUA imagem
+    no compilador do MindAR: https://hiukim.github.io/mind-ar-js-doc/tools/compile/)
+  -->
   <a-scene
-    vr-mode-ui="enabled: false"
+    mindar-image="imageTargetSrc: assets/marker/targets.mind; autoStart: true; uiScanning: no; uiLoading: no;"
+    color-space="sRGB"
     embedded
-    arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false;"
-    renderer="logarithmicDepthBuffer: true;"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
   >
     <a-assets>
       <video
         id="ar-video"
-        src="assets/Unama-video.webm"
+        src="assets/Unama-video.webp"
         preload="auto"
         loop
         muted
@@ -96,43 +101,26 @@
       ></video>
     </a-assets>
 
-    <!--
-      Troque o caminho abaixo pelos arquivos .fset / .fset3 / .iset
-      gerados a partir da SUA imagem. Não coloque a extensão.
-    -->
-    <a-nft
-      type="nft"
-      url="assets/marker/pattern-marker"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance="0.01"
-      smoothThreshold="5"
-      id="target"
-    >
-      <!--
-        width/height definem o tamanho do plano em relação ao marcador NFT
-        (a imagem escaneada é normalizada para width=1 pelo AR.js).
-        Ajuste "height" para bater com a proporção real da sua imagem/vídeo:
-        height = altura_da_imagem / largura_da_imagem
-      -->
-      <!-- TESTE TEMPORÁRIO 2: padrão mínimo oficial do AR.js NFT -->
-      <a-box
-        position="0 0.5 0"
-        material="color: red;"
-      ></a-box>
+    <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
 
+    <!--
+      targetIndex: 0 corresponde à primeira (e única, nesse caso) imagem
+      que você compilou no arquivo targets.mind.
+      O conteúdo filho aparece alinhado exatamente sobre a imagem rastreada.
+    -->
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
       <!--
+        width/height: ajuste "height" para a proporção real da SUA imagem
+        (height = altura_da_imagem / largura_da_imagem). width fica em 1.
+      -->
       <a-video
         src="#ar-video"
         width="1"
         height="0.5625"
-        position="0.5 0.28 0.01"
+        position="0 0 0"
         rotation="0 0 0"
       ></a-video>
-      -->
-    </a-nft>
-
-    <a-entity camera></a-entity>
+    </a-entity>
   </a-scene>
 
   <script>
@@ -147,7 +135,8 @@
 
     link.href = INSTAGRAM_VIDEO_URL;
 
-    target.addEventListener('markerFound', () => {
+    // MindAR dispara "targetFound" / "targetLost" (não "markerFound"/"markerLost")
+    target.addEventListener('targetFound', () => {
       overlay.style.display = 'block';
       hint.style.display = 'none';
       unmuteBtn.style.display = 'block';
@@ -155,7 +144,7 @@
       video.play().catch(() => {});
     });
 
-    target.addEventListener('markerLost', () => {
+    target.addEventListener('targetLost', () => {
       overlay.style.display = 'none';
       hint.style.display = 'block';
       video.pause();
