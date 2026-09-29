@@ -8,6 +8,8 @@
   <!-- A-Frame + AR.js -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar-nft.js"></script>
+  <!-- animation-mixer para animar o personagem 3D (KAN-3) -->
+  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.2.0/dist/aframe-extras.min.js"></script>
 
   <style>
     html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
@@ -40,6 +42,19 @@
       content: "▶";
     }
 
+    /* Botão fallback caso o navegador bloqueie o áudio automático (KAN-3) */
+    #audio-fallback {
+      display: none;
+      margin-top: 10px;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     /* Dica antes de escanear */
     #hint {
       position: fixed;
@@ -61,7 +76,11 @@
 
   <div id="video-overlay">
     <a id="video-link" href="#" target="_blank" rel="noopener">Assistir vídeo no Instagram</a>
+    <button id="audio-fallback" type="button">🔊 Ouvir apresentação</button>
   </div>
+
+  <!-- Narração da apresentação (KAN-3). Arquivo local em assets/audio/ -->
+  <audio id="narration" src="../assets/audio/audio-unama.mp4" preload="auto" playsinline></audio>
 
   <a-scene
     vr-mode-ui="enabled: false"
@@ -83,7 +102,24 @@
       smoothThreshold="5"
       id="target"
     >
+      <!-- Personagem 3D apresentando a UNAMA (KAN-3).
+        Para trocar pelo modelo definitivo, altere só a constante MODEL_URL
+        no script abaixo para "../assets/models/seu-personagem.glb". -->
+      <a-entity
+        id="character"
+        gltf-model="#personagem"
+        visible="false"
+        position="0 0 0"
+        rotation="0 0 0"
+        scale="50 50 50"
+        animation-mixer="clip: Idle; loop: repeat"
+      >
+      </a-entity>
     </a-nft>
+
+    <a-assets>
+      <a-asset-item id="personagem" src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@main/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb"></a-asset-item>
+    </a-assets>
 
     <a-entity camera></a-entity>
   </a-scene>
@@ -92,21 +128,63 @@
     // Link do vídeo do Instagram que você quer disponibilizar
     const INSTAGRAM_VIDEO_URL = "https://www.instagram.com/p/DbTMLwJlor8/?img_index=1";
 
+    // Modelo 3D do personagem (KAN-3). Modelo inicial de biblioteca;
+    // para usar o modelo definitivo, troque por "../assets/models/seu-personagem.glb"
+    // e atualize o src do <a-asset-item id="personagem"> acima.
+    const MODEL_URL = "https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@main/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb";
+
     const target = document.querySelector('#target');
     const overlay = document.querySelector('#video-overlay');
     const hint = document.querySelector('#hint');
     const link = document.querySelector('#video-link');
+    const character = document.querySelector('#character');
+    const narration = document.querySelector('#narration');
+    const audioFallback = document.querySelector('#audio-fallback');
+
+    // Aplica a URL do modelo ao asset (troca futura = mudar só MODEL_URL).
+    document.querySelector('#personagem').setAttribute('src', MODEL_URL);
 
     link.href = INSTAGRAM_VIDEO_URL;
+
+    // Desbloqueio de áudio no mobile: o primeiro toque carrega o elemento,
+    // o play real acontece no evento markerFound.
+    const unlockAudio = () => { narration.load(); };
+    document.addEventListener('touchend', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+
+    function playNarration() {
+      narration.currentTime = 0;
+      const playPromise = narration.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Navegador bloqueou o autoplay: exibe botão manual.
+          audioFallback.style.display = 'inline-block';
+        });
+      }
+    }
+
+    audioFallback.addEventListener('click', () => {
+      audioFallback.style.display = 'none';
+      narration.play().catch(() => {
+        audioFallback.style.display = 'inline-block';
+      });
+    });
 
     target.addEventListener('markerFound', () => {
       overlay.style.display = 'block';
       hint.style.display = 'none';
+      // KAN-3: exibe o personagem 3D e inicia a narração.
+      character.setAttribute('visible', true);
+      playNarration();
     });
 
     target.addEventListener('markerLost', () => {
       overlay.style.display = 'none';
       hint.style.display = 'block';
+      audioFallback.style.display = 'none';
+      // KAN-3: esconde o personagem e pausa a narração.
+      character.setAttribute('visible', false);
+      narration.pause();
     });
   </script>
 </body>
