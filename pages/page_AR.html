@@ -3,41 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>AR - Vídeo do Instagram</title>
+  <title>UNAMA WebAR</title>
 
   <!-- A-Frame + AR.js -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar-nft.js"></script>
+  <!-- animation-mixer para animar o personagem 3D (KAN-3) -->
+  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.2.0/dist/aframe-extras.min.js"></script>
 
   <style>
     html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
 
-    /* Overlay que aparece quando a imagem é reconhecida */
-    #video-overlay {
+    /* Botão fallback caso o navegador bloqueie o áudio automático (KAN-3) */
+    #audio-fallback {
       display: none;
       position: fixed;
       z-index: 999;
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.85);
-      color: #fff;
-      padding: 14px 22px;
-      border-radius: 40px;
-      text-align: center;
-    }
-
-    #video-overlay a {
-      color: #fff;
-      text-decoration: none;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    #video-overlay a::before {
-      content: "▶";
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      padding: 12px 20px;
+      font-weight: 700;
+      cursor: pointer;
     }
 
     /* Player de vídeo local, centralizado na tela. */
@@ -92,10 +83,12 @@
 
   <div id="hint">Aponte a câmera para a imagem</div>
 
-  <div id="video-overlay">
-    <a id="video-link" href="#" target="_blank" rel="noopener">Assistir vídeo no Instagram</a>
-  </div>
+  <button id="audio-fallback" type="button">🔊 Ouvir apresentação</button>
 
+  <!-- Narração da apresentação (KAN-3). Arquivo local em assets/audio/ -->
+  <audio id="narration" src="../assets/audio/audio-unama.mp4" preload="auto" playsinline></audio>
+
+  <!-- Player de vídeo local exibido ao reconhecer a imagem -->
   <div id="video-player">
     <video id="ar-video" src="../assets/Unama-video.webm" playsinline controls preload="metadata"></video>
     <button id="video-fallback" hidden>Toque para reproduzir com som</button>
@@ -107,11 +100,9 @@
     arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false;"
     renderer="logarithmicDepthBuffer: true;"
   >
-    <!--
-      Troque os caminhos abaixo pelos arquivos .fset / .fset3 / .iset
-      gerados a partir da SUA imagem (veja instruções abaixo do código).
-      Não coloque a extensão, só o "nome-base" do arquivo.
-    -->
+    <!-- Dois alvos NFT: vídeo no pattern-marker e personagem na
+      imagem-personagem (KAN-3).
+      Caminhos sem extensão, só o "nome-base" dos .fset/.fset3/.iset. -->
     <a-nft
       type="nft"
       url="../assets/marker/pattern-marker"
@@ -119,31 +110,87 @@
       smoothCount="10"
       smoothTolerance="0.01"
       smoothThreshold="5"
-      id="target"
+      id="target-video"
     >
     </a-nft>
+
+    <a-nft
+      type="nft"
+      url="../assets/marker/imagem-personagem"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+      id="target-character"
+    >
+      <!-- Personagem 3D apresentando a UNAMA (KAN-3). Modelo local em
+        ../assets/models/personagem-unama-compressed.glb.
+        Escala 170: modelo tem 1,0 de altura e o alvo tem 250 px,
+        então o personagem cobre ~68% da altura da imagem. -->
+      <a-entity
+        id="character"
+        gltf-model="#personagem"
+        visible="false"
+        position="0 0 0"
+        rotation="0 0 90"
+        scale="170 170 170"
+        animation-mixer="loop: repeat"
+      >
+      </a-entity>
+    </a-nft>
+
+    <a-assets>
+      <a-asset-item id="personagem" src="../assets/models/personagem-unama-compressed.glb"></a-asset-item>
+    </a-assets>
 
     <a-entity camera></a-entity>
   </a-scene>
 
   <script>
-    // Link do vídeo do Instagram que você quer disponibilizar
-    const INSTAGRAM_VIDEO_URL = "https://www.instagram.com/p/DbTMLwJlor8/?img_index=1";
+    // Personagem 3D definitivo da UNAMA (KAN-3), servido localmente.
+    const MODEL_URL = "../assets/models/personagem-unama-compressed.glb";
 
-    const target = document.querySelector('#target');
-    const overlay = document.querySelector('#video-overlay');
+    const targetVideo = document.querySelector('#target-video');
+    const targetCharacter = document.querySelector('#target-character');
     const hint = document.querySelector('#hint');
-    const link = document.querySelector('#video-link');
+    const character = document.querySelector('#character');
+    const narration = document.querySelector('#narration');
+    const audioFallback = document.querySelector('#audio-fallback');
     const player = document.querySelector('#video-player');
     const video = document.querySelector('#ar-video');
     const fallback = document.querySelector('#video-fallback');
 
-    link.href = INSTAGRAM_VIDEO_URL;
+    // Aplica a URL do modelo ao asset (troca futura = mudar só MODEL_URL).
+    document.querySelector('#personagem').setAttribute('src', MODEL_URL);
 
-    // Desbloqueio de mídia no mobile: primeiro toque/carregamento permite play() posterior.
-    const unlock = () => { video.load(); };
-    window.addEventListener('touchend', unlock, { once: true });
-    window.addEventListener('click', unlock, { once: true });
+    // Desbloqueio de mídia no mobile: o primeiro toque carrega os elementos,
+    // o play real acontece no evento markerFound.
+    const unlockAudio = () => { narration.load(); video.load(); };
+    document.addEventListener('touchend', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+
+    function playNarration() {
+      narration.currentTime = 0;
+      const playPromise = narration.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Navegador bloqueou o autoplay: exibe botão manual.
+          audioFallback.textContent = '🔊 Ouvir apresentação';
+          audioFallback.style.display = 'inline-block';
+        });
+      }
+    }
+
+    function hideAudioFallback() {
+      audioFallback.style.display = 'none';
+    }
+
+    audioFallback.addEventListener('click', () => {
+      audioFallback.style.display = 'none';
+      narration.play().catch(() => {
+        audioFallback.style.display = 'inline-block';
+      });
+    });
 
     fallback.addEventListener('click', () => {
       video.muted = false;
@@ -164,19 +211,46 @@
       }
     }
 
-    target.addEventListener('markerFound', () => {
-      overlay.style.display = 'block';
+    // A dica some quando qualquer marcador é encontrado e volta
+    // apenas quando todos são perdidos.
+    let videoFound = false;
+    let characterFound = false;
+    function updateHint() {
+      hint.style.display = (videoFound || characterFound) ? 'none' : 'block';
+    }
+
+    // Alvo 1 (pattern-marker): só o vídeo.
+    targetVideo.addEventListener('markerFound', () => {
+      videoFound = true;
+      updateHint();
       player.style.display = 'block';
-      hint.style.display = 'none';
       showVideo();
     });
 
-    target.addEventListener('markerLost', () => {
+    targetVideo.addEventListener('markerLost', () => {
+      videoFound = false;
+      updateHint();
       video.pause();
       player.style.display = 'none';
       fallback.hidden = true;
-      overlay.style.display = 'none';
-      hint.style.display = 'block';
+    });
+
+    // Alvo 2 (imagem-personagem): personagem 3D + narração.
+    targetCharacter.addEventListener('markerFound', () => {
+      characterFound = true;
+      updateHint();
+      // KAN-3: exibe o personagem 3D e inicia a narração.
+      character.setAttribute('visible', true);
+      playNarration();
+    });
+
+    targetCharacter.addEventListener('markerLost', () => {
+      characterFound = false;
+      updateHint();
+      hideAudioFallback();
+      // KAN-3: esconde o personagem e pausa a narração.
+      character.setAttribute('visible', false);
+      narration.pause();
     });
   </script>
 </body>
