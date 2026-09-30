@@ -77,16 +77,39 @@
       font-size: 14px;
       z-index: 999;
     }
+
+    /* Rótulo com o nome da sala (KAN-5), exibido ao reconhecer o target de áudio */
+    #room-label {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #073d36;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
 
   <div id="hint">Aponte a câmera para a imagem</div>
 
+  <!-- Nome da sala reconhecida (KAN-5). Visível só com o target de áudio. -->
+  <div id="room-label">📍 Laboratório L 101</div>
+
   <button id="audio-fallback" type="button">🔊 Ouvir apresentação</button>
 
   <!-- Narração da apresentação (KAN-3). Arquivo local em assets/audio/ -->
   <audio id="narration" src="../assets/audio/audio-unama.mp4" preload="auto" playsinline></audio>
+
+  <!-- Áudio com o nome da sala (KAN-5). Tocado ao reconhecer o target de áudio. -->
+  <audio id="room-audio" src="../assets/audio/audio-laboratorio.mp3" preload="auto" playsinline></audio>
 
   <!-- Player de vídeo local exibido ao reconhecer a imagem -->
   <div id="video-player">
@@ -100,8 +123,8 @@
     arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false;"
     renderer="logarithmicDepthBuffer: true;"
   >
-    <!-- Dois alvos NFT: vídeo no pattern-marker e personagem na
-      imagem-personagem (KAN-3).
+    <!-- Três alvos NFT: vídeo no pattern-marker, personagem na
+      imagem-personagem e áudio da sala na imagem-audio (KAN-5).
       Caminhos sem extensão, só o "nome-base" dos .fset/.fset3/.iset. -->
     <a-nft
       type="nft"
@@ -139,6 +162,19 @@
       </a-entity>
     </a-nft>
 
+    <!-- Alvo 3 (imagem-audio): só o áudio com o nome da sala (KAN-5).
+      Sem entidade 3D: o feedback visual é o rótulo #room-label. -->
+    <a-nft
+      type="nft"
+      url="../assets/marker/imagem-audio"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+      id="target-audio"
+    >
+    </a-nft>
+
     <a-assets>
       <a-asset-item id="personagem" src="../assets/models/personagem-unama-compressed.glb"></a-asset-item>
     </a-assets>
@@ -152,9 +188,12 @@
 
     const targetVideo = document.querySelector('#target-video');
     const targetCharacter = document.querySelector('#target-character');
+    const targetAudio = document.querySelector('#target-audio');
     const hint = document.querySelector('#hint');
     const character = document.querySelector('#character');
     const narration = document.querySelector('#narration');
+    const roomAudio = document.querySelector('#room-audio');
+    const roomLabel = document.querySelector('#room-label');
     const audioFallback = document.querySelector('#audio-fallback');
     const player = document.querySelector('#video-player');
     const video = document.querySelector('#ar-video');
@@ -165,9 +204,26 @@
 
     // Desbloqueio de mídia no mobile: o primeiro toque carrega os elementos,
     // o play real acontece no evento markerFound.
-    const unlockAudio = () => { narration.load(); video.load(); };
+    const unlockAudio = () => { narration.load(); roomAudio.load(); video.load(); };
     document.addEventListener('touchend', unlockAudio, { once: true });
     document.addEventListener('click', unlockAudio, { once: true });
+
+    // Áudio pendente de toque manual (quando o navegador bloqueia o autoplay).
+    // Aponta para narration ou roomAudio, conforme qual target foi reconhecido.
+    let pendingAudio = null;
+
+    function showAudioFallback(audio, text) {
+      pendingAudio = audio;
+      audioFallback.textContent = text;
+      audioFallback.style.display = 'inline-block';
+    }
+
+    function hideAudioFallback(audio) {
+      if (pendingAudio === null || pendingAudio === audio) {
+        pendingAudio = null;
+        audioFallback.style.display = 'none';
+      }
+    }
 
     function playNarration() {
       narration.currentTime = 0;
@@ -175,19 +231,27 @@
       if (playPromise !== undefined) {
         playPromise.catch(() => {
           // Navegador bloqueou o autoplay: exibe botão manual.
-          audioFallback.textContent = '🔊 Ouvir apresentação';
-          audioFallback.style.display = 'inline-block';
+          showAudioFallback(narration, '🔊 Ouvir apresentação');
         });
       }
     }
 
-    function hideAudioFallback() {
-      audioFallback.style.display = 'none';
+    // KAN-5: reproduz do zero o áudio com o nome da sala.
+    function playRoomAudio() {
+      roomAudio.currentTime = 0;
+      const playPromise = roomAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Navegador bloqueou o autoplay: exibe botão manual.
+          showAudioFallback(roomAudio, '🔊 Ouvir nome da sala');
+        });
+      }
     }
 
     audioFallback.addEventListener('click', () => {
+      const audio = pendingAudio || narration;
       audioFallback.style.display = 'none';
-      narration.play().catch(() => {
+      audio.play().catch(() => {
         audioFallback.style.display = 'inline-block';
       });
     });
@@ -215,8 +279,9 @@
     // apenas quando todos são perdidos.
     let videoFound = false;
     let characterFound = false;
+    let audioFound = false;
     function updateHint() {
-      hint.style.display = (videoFound || characterFound) ? 'none' : 'block';
+      hint.style.display = (videoFound || characterFound || audioFound) ? 'none' : 'block';
     }
 
     // Alvo 1 (pattern-marker): só o vídeo.
@@ -247,10 +312,28 @@
     targetCharacter.addEventListener('markerLost', () => {
       characterFound = false;
       updateHint();
-      hideAudioFallback();
+      hideAudioFallback(narration);
       // KAN-3: esconde o personagem e pausa a narração.
       character.setAttribute('visible', false);
       narration.pause();
+    });
+
+    // Alvo 3 (imagem-audio): rótulo com o nome da sala + áudio correspondente.
+    targetAudio.addEventListener('markerFound', () => {
+      audioFound = true;
+      updateHint();
+      // KAN-5: exibe o nome da sala e inicia o áudio do zero.
+      roomLabel.style.display = 'block';
+      playRoomAudio();
+    });
+
+    targetAudio.addEventListener('markerLost', () => {
+      audioFound = false;
+      updateHint();
+      hideAudioFallback(roomAudio);
+      // KAN-5: esconde o rótulo e interrompe o áudio ao perder o target.
+      roomLabel.style.display = 'none';
+      roomAudio.pause();
     });
   </script>
 </body>
