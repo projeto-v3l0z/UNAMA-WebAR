@@ -40,6 +40,39 @@
       content: "▶";
     }
 
+    /* Player de vídeo local, centralizado na tela. */
+    #video-player {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(92vw, 640px);
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    #video-player video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+    }
+
+    #video-fallback {
+      width: 100%;
+      border: 0;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background: #073d36;
+      cursor: pointer;
+    }
+
     /* Dica antes de escanear */
     #hint {
       position: fixed;
@@ -61,6 +94,11 @@
 
   <div id="video-overlay">
     <a id="video-link" href="#" target="_blank" rel="noopener">Assistir vídeo no Instagram</a>
+  </div>
+
+  <div id="video-player">
+    <video id="ar-video" src="../assets/Unama-video.webm" playsinline controls preload="metadata"></video>
+    <button id="video-fallback" hidden>Toque para reproduzir com som</button>
   </div>
 
   <a-scene
@@ -96,15 +134,47 @@
     const overlay = document.querySelector('#video-overlay');
     const hint = document.querySelector('#hint');
     const link = document.querySelector('#video-link');
+    const player = document.querySelector('#video-player');
+    const video = document.querySelector('#ar-video');
+    const fallback = document.querySelector('#video-fallback');
 
     link.href = INSTAGRAM_VIDEO_URL;
 
+    // Desbloqueio de mídia no mobile: primeiro toque/carregamento permite play() posterior.
+    const unlock = () => { video.load(); };
+    window.addEventListener('touchend', unlock, { once: true });
+    window.addEventListener('click', unlock, { once: true });
+
+    fallback.addEventListener('click', () => {
+      video.muted = false;
+      video.play().then(() => {
+        fallback.hidden = true;
+      }).catch(() => {});
+    });
+
+    function showVideo() {
+      fallback.hidden = true;
+      video.currentTime = 0;
+      const attempt = video.play();
+      if (attempt && typeof attempt.catch === 'function') {
+        attempt.catch(() => {
+          // Autoplay com som bloqueado: mostra botão para o usuário ativar.
+          fallback.hidden = false;
+        });
+      }
+    }
+
     target.addEventListener('markerFound', () => {
       overlay.style.display = 'block';
+      player.style.display = 'block';
       hint.style.display = 'none';
+      showVideo();
     });
 
     target.addEventListener('markerLost', () => {
+      video.pause();
+      player.style.display = 'none';
+      fallback.hidden = true;
       overlay.style.display = 'none';
       hint.style.display = 'block';
     });
